@@ -18,9 +18,20 @@ android {
     }
     buildToolsVersion '27.0.3'
 }
+task nativeLibsToJar(type: Jar, description: "create a jar archive of the native libs") {
+    destinationDir file("$buildDir/native-libs")
+    baseName "native-libs"
+    extension "jar"
+    from fileTree(dir: "libs", include: "**/*.so")
+    into "lib"
+}
 
+tasks.withType(JavaCompile) {
+    compileTask -> compileTask.dependsOn(nativeLibsToJar)
+}
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: "$buildDir/native-libs", include: 'native-libs.jar')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     testImplementation 'junit:junit:4.12'
@@ -30,4 +41,5 @@ dependencies {
     //=======================工具类========================
     implementation 'com.blankj:utilcode:1.22.0'
     implementation 'com.rmtheis:tess-two:9.0.0'
+    implementation project(':openCVLibrary330')
 }

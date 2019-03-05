@@ -16,6 +16,9 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Toast;
 
+import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ToastUtils;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,7 +47,8 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
     private int screenHeight;//屏幕的高度
     private int screenWidth;//屏幕的宽度
     private boolean isPreviewing;//是否在预览
-    private int[] mMaskSize;
+    private int[] mMaskSize;//遮罩的宽高
+    private TakePictureCallBack takePictureCallBack;//拍照的回调函数
     public static Camera.Size pictureSize;
     private Camera.Size previewSize;
     public CameraView(Context context) {
@@ -67,6 +71,14 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
         getHolder().addCallback(this);
     }
 
+    public TakePictureCallBack getTakePictureCallBack() {
+        return takePictureCallBack;
+    }
+
+    public void setTakePictureCallBack(TakePictureCallBack takePictureCallBack) {
+        this.takePictureCallBack = takePictureCallBack;
+    }
+
     public boolean isPreviewing() {
         return isPreviewing;
     }
@@ -79,7 +91,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
         this.mMaskSize = mMaskSize;
     }
 
-    public void takePicture(final TakePictureCallBack takePictureCallBack){
+    public void takePicture(){
         mCamera.autoFocus(new Camera.AutoFocusCallback() {
             @Override
             public void onAutoFocus(boolean flag, Camera camera) {
@@ -90,11 +102,6 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
                         if(takePictureCallBack!=null){
                             takePictureCallBack.onShutter();
                         }
-//                        if (tone == null) {
-//                            //发出提示用户的声音
-//                            tone = new ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME);
-//                        }
-//                        tone.startTone(ToneGenerator.TONE_PROP_BEEP);
                     }
                 }, null, new Camera.PictureCallback() {
                     @Override
@@ -118,60 +125,24 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
      * @return
      */
     private Bitmap savePicture(byte[] data) {
-//        File imgFileDir = getImageDir();
-//        if (!imgFileDir.exists() && !imgFileDir.mkdirs()) {
-//            return null;
-//        }
-//        //文件路径路径
-//        String imgFilePath = imgFileDir.getPath() + File.separator + this.generateFileName();
         Bitmap b = this.cutImage(data);
-//        File imgFile = new File(imgFilePath);
-//        FileOutputStream fos = null;
-//        BufferedOutputStream bos = null;
-//        try {
-//            fos = new FileOutputStream(imgFile);
-//            bos = new BufferedOutputStream(fos);
-//            b.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-//        } catch (Exception error) {
-//            return null;
-//        } finally {
-//            try {
-//                if (fos != null) {
-//                    fos.flush();
-//                    fos.close();
-//                }
-//                if (bos != null) {
-//                    bos.flush();
-//                    bos.close();
-//                }
-//                if(b!=null){
-//                    b.recycle();
-//                }
-//            } catch (IOException e) {
-//            }
-//        }
         return b;
     }
-    /**
-     * 生成图片名称
-     *
-     * @return
-     */
-    private String generateFileName() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss", Locale.getDefault());
-        String strDate = dateFormat.format(new Date());
-        return "img_" + strDate + ".jpg";
-    }
 
-    /**
-     * @return
-     */
-    private File getImageDir() {
-        File file = new File(Environment.getExternalStorageDirectory().getPath() + "/ocr/tempphoto");
-        if (!file.exists()) {
-            file.mkdir();
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(event.getAction()==MotionEvent.ACTION_DOWN){
+            if(mCamera!=null&&isPreviewing){
+                mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean success, Camera camera) {
+
+                    }
+                });
+            }
+            return true;
         }
-        return file;
+        return super.onTouchEvent(event);
     }
     /**
      * 裁剪照片
@@ -196,6 +167,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
         try {
             screenHeight = getHeight();
             screenWidth = getWidth();
+            releaseCamera();
             mCamera = Camera.open();//获取相机
             initCamera();
         }catch (Exception e){
@@ -222,9 +194,6 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
      */
     private void setCameraParameters() {
         Camera.Parameters parameters = mCamera.getParameters();
-        if(isSupportAutoFocus){
-            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);//自动对焦
-        }
         float percent = calcPreviewPercent();
         List<Camera.Size> supportedPreviewSizes = parameters.getSupportedPreviewSizes();
         previewSize = getPreviewMaxSize(supportedPreviewSizes, percent);
@@ -251,6 +220,12 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
         return d / screenWidth;
     }
 
+    /**
+     * 获取摄像头支持的各种分辨率
+     * @param supportedPictureSizes
+     * @param size
+     * @return
+     */
     private Camera.Size findSizeFromList(List<Camera.Size> supportedPictureSizes, Camera.Size size) {
         Camera.Size s = null;
         if (supportedPictureSizes != null && !supportedPictureSizes.isEmpty()) {
@@ -348,7 +323,16 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
     }
 
     public interface TakePictureCallBack{
+        /**
+         * 用于实现照相声音
+         */
         void onShutter();
+
+        /**
+         * 拍照的回调
+         * @param isSuccess
+         * @param filepath
+         */
         void onPictureTaken(boolean isSuccess,Bitmap filepath);
     }
 }
