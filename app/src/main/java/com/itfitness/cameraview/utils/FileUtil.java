@@ -32,10 +32,10 @@ public class FileUtil {
             File dir = new File(filepath);
             if(!dir.exists()){
                 dir.mkdirs();
-                InputStream inputStream = context.getResources().openRawResource(R.raw.nums);
+                InputStream inputStream = context.getResources().openRawResource(R.raw.card);
                 LogUtils.eTag("Cehsi",dir.getAbsolutePath());
                 ToastUtils.showShort(dir.getAbsolutePath());
-                File file = new File(dir,"nums.traineddata");
+                File file = new File(dir,"card.traineddata");
                 LogUtils.eTag("Cehsi",file.getAbsolutePath());
                 FileOutputStream fileOutputStream=new FileOutputStream(file);
                 byte[] buff = new byte[1024];

@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.itfitness.cameraview.CardOcrActivity">
+    tools:context="com.itfitness.cameraview.TakePictureCardOcrActivity">
 
-    <com.itfitness.cameraview.widget.CameraView
+    <com.itfitness.cameraview.widget.camera.TakePictureCameraView
         android:id="@+id/camera"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-    <com.itfitness.cameraview.widget.MaskView
+    <com.itfitness.cameraview.widget.mask.TakePictureMaskView
         android:id="@+id/mask"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

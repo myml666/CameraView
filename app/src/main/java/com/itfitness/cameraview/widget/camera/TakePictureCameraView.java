@@ -1,4 +1,4 @@
-package com.itfitness.cameraview.widget;
+package com.itfitness.cameraview.widget.camera;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -41,7 +41,7 @@ import java.util.Locale;
  * @Version: 1.0
  */
 
-public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
+public class TakePictureCameraView extends SurfaceView implements SurfaceHolder.Callback{
     private Camera mCamera;//相机
     private boolean isSupportAutoFocus;//是否支持自动对焦
     private int screenHeight;//屏幕的高度
@@ -51,17 +51,17 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
     private TakePictureCallBack takePictureCallBack;//拍照的回调函数
     public static Camera.Size pictureSize;
     private Camera.Size previewSize;
-    public CameraView(Context context) {
+    public TakePictureCameraView(Context context) {
         super(context);
         init();
     }
 
-    public CameraView(Context context, AttributeSet attrs) {
+    public TakePictureCameraView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public CameraView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public TakePictureCameraView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

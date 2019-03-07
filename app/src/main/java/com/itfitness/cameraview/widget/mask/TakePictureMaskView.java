@@ -1,4 +1,4 @@
-package com.itfitness.cameraview.widget;
+package com.itfitness.cameraview.widget.mask;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -29,7 +29,7 @@ import com.itfitness.cameraview.R;
  * @Version: 1.0
  */
 
-public class MaskView extends View {
+public class TakePictureMaskView extends View {
     private float mMaskWidth;//中间透明部分的宽度
     private float mMaskHeight;//中间透明部分的高度
     private Paint mPaintMask;//遮罩画笔
@@ -40,17 +40,17 @@ public class MaskView extends View {
     private String mBottomTripStr = "请保持光线充足，背景干净，手机与卡片持平";
     private Bitmap mPersonBitmap;
 
-    public MaskView(Context context) {
+    public TakePictureMaskView(Context context) {
         super(context);
         init();
     }
 
-    public MaskView(Context context, @Nullable AttributeSet attrs) {
+    public TakePictureMaskView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public MaskView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public TakePictureMaskView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -68,6 +68,8 @@ public class MaskView extends View {
         mMaskWidth = w/5*3;//遮罩透明部分的宽度为控件宽度的3/5
         mMaskHeight = mMaskWidth*1.59f;//遮罩透明部分的高度根据身份证比例算出
         mMaskPath.reset();
+        mTextSize = w/20;
+        mPaintText.setTextSize(mTextSize);//设置文字大小
         float left = (w-mMaskWidth)/2;
         float top = (h-mMaskHeight)/2;
         float right = left + mMaskWidth;
@@ -104,7 +106,6 @@ public class MaskView extends View {
         mPaintText = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaintText.setStrokeWidth(3);
         mPaintText.setColor(Color.WHITE);//设置文字颜色
-        mPaintText.setTextSize(mTextSize);//设置文字大小
         mPaintText.setTextAlign(Paint.Align.CENTER);//文字水平居中
 
         mMaskPath = new Path();

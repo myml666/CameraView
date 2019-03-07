@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.percent.PercentRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.itfitness.cameraview.widget.camera.ScanningCameraView
+        android:id="@+id/camera2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+    <com.itfitness.cameraview.widget.mask.ScanningMaskView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+    <RelativeLayout
+        android:id="@+id/layout_scanning"
+        app:layout_aspectRatio="63%"
+        app:layout_widthPercent="60%"
+        android:layout_centerInParent="true">
+        <View
+            android:id="@+id/view_scanningline"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/shape_scanningline"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"/>
+    </RelativeLayout>
+    <ImageView
+        android:id="@+id/img"
+        android:scaleType="centerInside"
+        android:layout_width="wrap_content"
+        android:layout_height="90dp"
+        />
+    <ImageView
+        android:id="@+id/img_light"
+        android:layout_centerHorizontal="true"
+        app:layout_marginTopPercent="86%"
+        android:rotation="90"
+        android:background="@drawable/selector_light"
+        app:layout_aspectRatio="120%"
+        app:layout_widthPercent="15%"
+        />
+</android.support.percent.PercentRelativeLayout>

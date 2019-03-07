@@ -42,4 +42,5 @@ dependencies {
     implementation 'com.blankj:utilcode:1.22.0'
     implementation 'com.rmtheis:tess-two:9.0.0'
     implementation project(':openCVLibrary330')
+    implementation 'com.android.support:percent:27.1.1'
 }

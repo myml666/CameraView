@@ -12,16 +12,16 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.googlecode.tesseract.android.TessBaseAPI;
 import com.itfitness.cameraview.utils.CardUtil;
 import com.itfitness.cameraview.utils.FileUtil;
-import com.itfitness.cameraview.widget.CameraView;
-import com.itfitness.cameraview.widget.MaskView;
+import com.itfitness.cameraview.widget.camera.TakePictureCameraView;
+import com.itfitness.cameraview.widget.mask.TakePictureMaskView;
 import org.opencv.android.OpenCVLoader;
 import java.io.File;
 
-public class CardOcrActivity extends AppCompatActivity implements CameraView.TakePictureCallBack{
-    private CameraView camera;
+public class TakePictureCardOcrActivity extends AppCompatActivity implements TakePictureCameraView.TakePictureCallBack{
+    private TakePictureCameraView camera;
     private View viewTakepicture;
     private ImageView img;
-    private MaskView mask;
+    private TakePictureMaskView mask;
     private ImageView imgOk;
     private ImageView imgCancle;
     private Bitmap mBitmapResult;
@@ -60,10 +60,10 @@ public class CardOcrActivity extends AppCompatActivity implements CameraView.Tak
     }
 
     private void initView(){
-        camera = (CameraView) findViewById(R.id.camera);
+        camera = (TakePictureCameraView) findViewById(R.id.camera);
         viewTakepicture = (View) findViewById(R.id.view_takepicture);
         img = (ImageView) findViewById(R.id.img);
-        mask = (MaskView) findViewById(R.id.mask);
+        mask = (TakePictureMaskView) findViewById(R.id.mask);
         camera.setTakePictureCallBack(this);
         imgOk = (ImageView) findViewById(R.id.img_ok);
         imgCancle = (ImageView) findViewById(R.id.img_cancle);
@@ -94,10 +94,10 @@ public class CardOcrActivity extends AppCompatActivity implements CameraView.Tak
             @Override
             public void run() {
                 try {
-                    FileUtil.copyRes2SD(tessdata,CardOcrActivity.this);
+                    FileUtil.copyRes2SD(tessdata,TakePictureCardOcrActivity.this);
                     if(mTessBaseAPI==null){
                         mTessBaseAPI = new TessBaseAPI();
-                        mTessBaseAPI.init(DATA_PATH,"nums");
+                        mTessBaseAPI.init(DATA_PATH,"card");
                     }
                 }catch (Exception e){}
             }
@@ -131,12 +131,8 @@ public class CardOcrActivity extends AppCompatActivity implements CameraView.Tak
     public void onPictureTaken(boolean isSuccess,Bitmap filepath2) {
         if(isSuccess){
             layoutCardresult.setVisibility(View.VISIBLE);
-//            img.setImageBitmap(filepath2);
+            img.setImageBitmap(filepath2);
             mBitmapResult = filepath2;
-            final Bitmap bitmap = CardUtil.clipCardNumber(mBitmapResult);
-            CardUtil.getBinaryImage(bitmap);
-            img.setImageBitmap(bitmap);
-
         }
     }
 

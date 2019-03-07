@@ -22,7 +22,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CardOcrActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".TakePictureCardOcrActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".ScanningCardOcrActivity" android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
