@@ -72,7 +72,6 @@ public class TakePictureCardOcrActivity extends AppCompatActivity implements Tak
         viewTakepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                camera.setmMaskSize(new int[]{(int) mask.getmMaskWidth(), (int) mask.getmMaskHeight()});
                 camera.takePicture();
             }
         });

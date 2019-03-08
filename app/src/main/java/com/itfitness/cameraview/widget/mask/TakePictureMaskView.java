@@ -81,19 +81,6 @@ public class TakePictureMaskView extends View {
         bitmap.recycle();
         invalidate();
     }
-    /**
-     * 返回遮罩宽度
-     */
-    public float getmMaskWidth() {
-        return mMaskWidth;
-    }
-    /**
-     * 返回遮罩高度
-     */
-    public float getmMaskHeight() {
-        return mMaskHeight;
-    }
-
     private void init(){
         //关闭硬件加速
         setLayerType(LAYER_TYPE_SOFTWARE,null);

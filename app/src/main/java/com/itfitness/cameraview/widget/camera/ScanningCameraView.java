@@ -9,11 +9,16 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
+import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -25,6 +30,7 @@ import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.RegexUtils;
 import com.googlecode.tesseract.android.TessBaseAPI;
 import com.itfitness.cameraview.MainActicity;
+import com.itfitness.cameraview.R;
 import com.itfitness.cameraview.utils.CardUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -35,7 +41,7 @@ import java.util.List;
  * @ProjectName: CameraView
  * @Package: com.itfitness.cameraview.widget
  * @ClassName: CameraView
- * @Description: java类作用描述 ：
+ * @Description: java类作用描述 ：扫描式身份证号识别
  * @Author: 作者名：lml
  * @CreateDate: 2019/3/1 14:47
  * @UpdateUser: 更新者：
@@ -51,9 +57,8 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
     private int screenWidth;//屏幕的宽度
     private boolean isPreviewing;//是否在预览
     private IdentifyCallBack identifyCallBack;//扫描成功的回调函数
-    public static Camera.Size pictureSize;
-    private Camera.Size previewSize;
     private boolean isScanning =false;
+    private MediaPlayer mMediaPlayer;
     public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString()
             + "/Tess";
     /**
@@ -66,6 +71,7 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
             super.handleMessage(msg);
             if (msg.what == 0) {
                 if(identifyCallBack!=null){
+                    openMusic();
                     identifyCallBack.onIdentifySuccess((String) msg.obj);
                 }
             }else if (msg.what == 1){
@@ -90,6 +96,9 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
         init();
     }
     private void init() {
+        DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
+        screenWidth = dm.heightPixels;
+        screenHeight = dm.widthPixels;
         isSupportAutoFocus = getContext().getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_CAMERA_AUTOFOCUS);
         getHolder().addCallback(this);
@@ -99,6 +108,13 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
         this.identifyCallBack = identifyCallBack;
     }
 
+    /**
+     * 发出声音
+     */
+    public  void  openMusic(){
+        mMediaPlayer= MediaPlayer.create(getContext(), R.raw.music_saomiao);
+        mMediaPlayer.start();
+    }
     /**
      * 开灯
      */
@@ -181,7 +197,7 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
             isScanning = false;
             return;
         }
-        if(!RegexUtils.isIDCard18(result)){//不是身份证格式
+        if(!RegexUtils.isIDCard18Exact(result)){//不是身份证格式
             isScanning = false;
         }else{
             isScanning = true;
@@ -217,20 +233,37 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
     private Bitmap cutImage(Bitmap bitmap) {
         int h = bitmap.getWidth();
         int w = bitmap.getHeight();
-        int clipw = w/5*3;
+        int clipw = w/5*3;//这里根据遮罩的比例进行裁剪
         int cliph = (int) (clipw*1.59f);
         int x = (w - clipw) / 2;
         int y = (h - cliph) / 2;
         return Bitmap.createBitmap(bitmap, y, x,cliph, clipw);
     }
+    /**
+     * 打开指定摄像头
+     */
+    public void openCamera() {
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int cameraId = 0; cameraId < Camera.getNumberOfCameras(); cameraId++) {
+            Camera.getCameraInfo(cameraId, cameraInfo);
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                try {
+                    mCamera = Camera.open(cameraId);
+                } catch (Exception e) {
+                    if (mCamera != null) {
+                        mCamera.release();
+                        mCamera = null;
+                    }
+                }
+                break;
+            }
+        }
+    }
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         try {
-            screenHeight = getHeight();
-            screenWidth = getWidth();
             releaseCamera();
-            mCamera = Camera.open();//获取相机
-            initCamera();
+            openCamera();
         }catch (Exception e){
             mCamera = null;
         }
@@ -255,94 +288,18 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
      */
     private void setCameraParameters() {
         Camera.Parameters parameters = mCamera.getParameters();
-        float percent = calcPreviewPercent();
-        List<Camera.Size> supportedPreviewSizes = parameters.getSupportedPreviewSizes();
-        previewSize = getPreviewMaxSize(supportedPreviewSizes, percent);
-        // 获取摄像头支持的各种分辨率
-        List<Camera.Size> supportedPictureSizes = parameters.getSupportedPictureSizes();
-        pictureSize = findSizeFromList(supportedPictureSizes, previewSize);
-        if (pictureSize == null) {
-            pictureSize = getPictureMaxSize(supportedPictureSizes, previewSize);
+        List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
+        //确定前面定义的预览宽高是camera支持的，不支持取就更大的
+        for (int i = 0; i < sizes.size(); i++) {
+            if ((sizes.get(i).width >= screenWidth && sizes.get(i).height >= screenHeight) || i == sizes.size() - 1) {
+                screenWidth = sizes.get(i).width;
+                screenHeight = sizes.get(i).height;
+                break;
+            }
         }
-        screenWidth = previewSize.width;
-        screenHeight = previewSize.height;
-        // 设置照片分辨率，注意要在摄像头支持的范围内选择
-        parameters.setPictureSize(pictureSize.width, pictureSize.height);
-        // 设置预浏尺寸，注意要在摄像头支持的范围内选择
-        parameters.setPreviewSize(previewSize.width, previewSize.height);
-        parameters.setJpegQuality(75);//设置图片质量（科大讯飞需要的图片质量为75以上）
+        //设置最终确定的预览大小
+        parameters.setPreviewSize(screenWidth, screenHeight);
         mCamera.setParameters(parameters);
-    }
-
-    /**
-     * 获取本控件的长宽比例（结合分辨率等的设置解决图像拉伸问题）
-     * @return
-     */
-    private float calcPreviewPercent() {
-        float d = screenHeight;
-        return d / screenWidth;
-    }
-
-    /**
-     * 获取摄像头支持的各种分辨率
-     * @param supportedPictureSizes
-     * @param size
-     * @return
-     */
-    private Camera.Size findSizeFromList(List<Camera.Size> supportedPictureSizes, Camera.Size size) {
-        Camera.Size s = null;
-        if (supportedPictureSizes != null && !supportedPictureSizes.isEmpty()) {
-            for (Camera.Size su : supportedPictureSizes) {
-                if (size.width == su.width && size.height == su.height) {
-                    s = su;
-                    break;
-                }
-            }
-        }
-        return s;
-    }
-
-    // 根据摄像头的获取与屏幕分辨率最为接近的一个分辨率
-    private Camera.Size getPictureMaxSize(List<Camera.Size> l, Camera.Size size) {
-        Camera.Size s = null;
-        for (int i = 0; i < l.size(); i++) {
-            if (l.get(i).width >= size.width && l.get(i).height >= size.width
-                    && l.get(i).height != l.get(i).width) {
-                if (s == null) {
-                    s = l.get(i);
-                } else {
-                    if (s.height * s.width > l.get(i).width * l.get(i).height) {
-                        s = l.get(i);
-                    }
-                }
-            }
-        }
-        return s;
-    }
-
-    // 获取预览的最大分辨率
-    private Camera.Size getPreviewMaxSize(List<Camera.Size> l, float j) {
-        int idx_best = 0;
-        int best_width = 0;
-        float best_diff = 100.0f;
-        for (int i = 0; i < l.size(); i++) {
-            int w = l.get(i).width;
-            int h = l.get(i).height;
-            if (w * h < screenHeight * screenWidth)
-                continue;
-            float previewPercent = (float) w / h;
-            float diff = Math.abs(previewPercent - j);
-            if (diff < best_diff) {
-                idx_best = i;
-                best_diff = diff;
-                best_width = w;
-            } else if (diff == best_diff && w > best_width) {
-                idx_best = i;
-                best_diff = diff;
-                best_width = w;
-            }
-        }
-        return l.get(idx_best);
     }
     /**
      * 释放相机
@@ -388,6 +345,17 @@ public class ScanningCameraView extends SurfaceView implements SurfaceHolder.Cal
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         releaseCamera();
+    }
+
+    /**
+     * 释放MediaPlayer
+     */
+    private void releaseMediaPlayer() {
+        if(mMediaPlayer!=null){
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
 
     public interface IdentifyCallBack{
